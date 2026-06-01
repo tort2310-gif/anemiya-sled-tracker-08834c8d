@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { useStore } from "@/hooks/use-store";
 import { ageFrom, deletePatient, deleteTest } from "@/lib/anemia/storage";
-import { TestForm } from "@/components/anemia/TestForm";
+import { TestWizard } from "@/components/anemia/TestWizard";
 import { StatsDashboard } from "@/components/anemia/StatsDashboard";
 import type { TestEntry } from "@/lib/anemia/types";
 import { ALL_LAB_KEYS, getRange, statusOf } from "@/lib/anemia/ranges";
@@ -138,7 +138,7 @@ function PatientPage() {
         </Tabs>
       </main>
 
-      <TestForm patientId={patient.id} open={formOpen} onOpenChange={setFormOpen} initial={editing} />
+      <TestWizard patient={patient} open={formOpen} onOpenChange={setFormOpen} initial={editing} />
     </div>
   );
 }
