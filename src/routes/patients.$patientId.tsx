@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useStore } from "@/hooks/use-store";
 import { ageFrom, deletePatient, deleteTest } from "@/lib/anemia/storage";
 import { TestWizard } from "@/components/anemia/TestWizard";
 import { StatsDashboard } from "@/components/anemia/StatsDashboard";
+import { DiagnosisResultCard } from "@/components/anemia/DiagnosisResultCard";
+import { diagnose, branchColor, branchLabel, getBranch } from "@/lib/anemia/diagnose";
+import { explain } from "@/lib/anemia/explain";
 import type { TestEntry } from "@/lib/anemia/types";
 import { ALL_LAB_KEYS, getRange, statusOf } from "@/lib/anemia/ranges";
 
