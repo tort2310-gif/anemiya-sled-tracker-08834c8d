@@ -14,9 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { addTest, updateTest } from "@/lib/anemia/storage";
 import { getRange, statusOf } from "@/lib/anemia/ranges";
 import { branchColor, branchLabel, diagnose, getBranch } from "@/lib/anemia/diagnose";
+import { explain } from "@/lib/anemia/explain";
+import { DiagnosisResultCard } from "./DiagnosisResultCard";
 import type { Patient, TestEntry } from "@/lib/anemia/types";
 
 interface Props {
@@ -144,9 +147,14 @@ export function TestWizard({ patient, open, onOpenChange, initial }: Props) {
       morphology: d.morphology || undefined,
       notes: buildNotes(d),
     };
-    if (initial) updateTest(initial.id, patient.id, payload);
-    else addTest(payload);
-    onOpenChange(false);
+    try {
+      if (initial) updateTest(initial.id, patient.id, payload);
+      else addTest(payload);
+      toast.success("Сохранено ✓", { description: `Анализ от ${d.date} сохранён в профиль` });
+      onOpenChange(false);
+    } catch (err) {
+      toast.error("Данные не сохранены", { description: String(err) });
+    }
   };
 
   return (
@@ -332,34 +340,29 @@ export function TestWizard({ patient, open, onOpenChange, initial }: Props) {
         {step === 3 && (
           <div className="grid gap-3">
             {!anemia ? (
-              <div className="rounded-md border p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  <span className="font-semibold">Анемия не выявлена</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Гемоглобин в пределах референса. Запись будет сохранена в истории.
-                </p>
-              </div>
+              <DiagnosisResultCard
+                details={explain({
+                  number: 0,
+                  name: "Анемия не выявлена",
+                  branch,
+                  entry: entryPreview,
+                  patient,
+                })}
+              />
             ) : (
-              <div className="rounded-md border p-4" style={{ borderColor: branchColor(branch) }}>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <Badge style={{ background: branchColor(branch), color: "white" }}>{branchLabel(branch)}</Badge>
-                  <span className="text-xs text-muted-foreground">Диагноз №{dx.number}</span>
-                </div>
-                <div className="text-lg font-semibold leading-tight">{dx.name}</div>
-                {dx.reasons.length > 0 && (
-                  <ul className="mt-2 list-disc list-inside text-sm text-muted-foreground">
-                    {dx.reasons.map((r, i) => <li key={i}>{r}</li>)}
-                  </ul>
-                )}
-              </div>
+              <DiagnosisResultCard
+                details={explain({
+                  number: dx.number,
+                  name: dx.name,
+                  branch: dx.branch,
+                  entry: entryPreview,
+                  patient,
+                })}
+              />
             )}
-            <div className="text-xs text-muted-foreground">
-              Это автоматическое предположение по алгоритму MCV — не заменяет очной консультации врача.
-            </div>
           </div>
         )}
+
 
         <DialogFooter className="flex justify-between gap-2 sm:justify-between">
           <div>
