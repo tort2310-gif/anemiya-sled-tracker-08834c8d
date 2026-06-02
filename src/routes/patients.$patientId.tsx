@@ -186,9 +186,8 @@ function PatientPage() {
                 );
               })
             )}
-
-            )}
           </TabsContent>
+
 
           <TabsContent value="stats">
             <StatsDashboard patient={patient} tests={tests} />
