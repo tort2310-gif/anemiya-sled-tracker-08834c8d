@@ -43,6 +43,15 @@ export function StatsDashboard({ patient, tests }: Props) {
   const branch = getBranch(latest.mcv);
   const dx = diagnose(latest, patient);
 
+  // Diagnosis history timeline
+  const history = tests.map((t) => {
+    const br = getBranch(t.mcv);
+    const hbR = getRange("hb", patient.gender);
+    const anemia = typeof t.hb === "number" && t.hb < hbR.min;
+    const dxx = anemia ? diagnose(t, patient) : null;
+    return { date: t.date, branch: br, dx: dxx };
+  });
+
   return (
     <div className="grid gap-4">
       {/* Auto-diagnosis */}
@@ -66,6 +75,35 @@ export function StatsDashboard({ patient, tests }: Props) {
           )}
         </CardContent>
       </Card>
+
+      {/* Diagnosis history */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Диагностическая история</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {history.map((h, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="rounded-md border px-2 py-1.5">
+                  <div className="text-muted-foreground">{h.date}</div>
+                  {h.dx ? (
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="inline-block h-2 w-2 rounded-full" style={{ background: branchColor(h.branch) }} />
+                      <span className="font-medium">№{h.dx.number}</span>
+                      <span className="truncate max-w-[140px]">{h.dx.name}</span>
+                    </div>
+                  ) : (
+                    <div className="text-emerald-600 font-medium mt-0.5">✓ Норма</div>
+                  )}
+                </div>
+                {i < history.length - 1 && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* Trend arrows */}
       <Card>
