@@ -31,6 +31,8 @@ function PatientPage() {
   );
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TestEntry | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
 
   if (!patient) {
     return (
@@ -86,53 +88,105 @@ function PatientPage() {
             {tests.length === 0 ? (
               <Card><CardContent className="py-10 text-center text-muted-foreground">Нет анализов. Добавьте первый.</CardContent></Card>
             ) : (
-              [...tests].reverse().map((t) => (
-                <Card key={t.id}>
+              [...tests].reverse().map((t) => {
+                const br = getBranch(t.mcv);
+                const hbR = getRange("hb", patient.gender);
+                const hasAnemia = typeof t.hb === "number" && t.hb < hbR.min;
+                const dx = hasAnemia ? diagnose(t, patient) : null;
+                const isOpen = expanded === t.id;
+                return (
+                <Card key={t.id} style={{ borderLeft: `4px solid ${dx ? branchColor(br) : "var(--success, #16a34a)"}` }}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
-                      <div>
-                        <div className="font-medium">{t.date}</div>
-                        {t.notes && <div className="text-xs text-muted-foreground mt-0.5">{t.notes}</div>}
-                      </div>
+                      <button
+                        type="button"
+                        className="flex-1 text-left flex items-center gap-2"
+                        onClick={() => setExpanded(isOpen ? null : t.id)}
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium flex items-center gap-2 flex-wrap">
+                            {t.date}
+                            {dx ? (
+                              <>
+                                <Badge style={{ background: branchColor(br), color: "white" }}>{branchLabel(br)}</Badge>
+                                <Badge variant="outline">№{dx.number} · {dx.name}</Badge>
+                              </>
+                            ) : (
+                              <Badge style={{ background: "var(--success, #16a34a)", color: "white" }}>Норма</Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1 flex gap-3 flex-wrap">
+                            {typeof t.hb === "number" && <span>Hb: {t.hb}</span>}
+                            {typeof t.mcv === "number" && <span>MCV: {t.mcv}</span>}
+                            {typeof t.ferritin === "number" && <span>Ферритин: {t.ferritin}</span>}
+                          </div>
+                        </div>
+                        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </button>
                       <div className="flex gap-1">
                         <Button size="sm" variant="ghost" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => { if (confirm("Удалить запись?")) deleteTest(t.id, patient.id); }}
+                          onClick={() => {
+                            if (confirm("Удалить запись?")) {
+                              deleteTest(t.id, patient.id);
+                              toast.success("Запись удалена");
+                            }
+                          }}
                         ><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                      {ALL_LAB_KEYS.map((k) => {
-                        const v = t[k as keyof TestEntry] as number | undefined;
-                        if (typeof v !== "number") return null;
-                        const r = getRange(k, patient.gender);
-                        const s = statusOf(v, r);
-                        return (
-                          <div key={k} className="rounded-md border px-2 py-1.5 text-sm">
-                            <div className="text-[11px] text-muted-foreground">{r.label}</div>
-                            <div className="flex items-baseline gap-1">
-                              <span style={{ color: s === "ok" || s === "na" ? undefined : "var(--destructive)" }} className="font-medium">
-                                {v}
-                              </span>
-                              <span className="text-[11px] text-muted-foreground">{r.unit}</span>
-                              {s === "low" && <Badge variant="destructive" className="ml-auto text-[10px] py-0 px-1.5">↓</Badge>}
-                              {s === "high" && <Badge variant="destructive" className="ml-auto text-[10px] py-0 px-1.5">↑</Badge>}
+                    {isOpen && (
+                      <div className="mt-4 pt-4 border-t">
+                        <DiagnosisResultCard
+                          details={explain({
+                            number: dx?.number ?? 0,
+                            name: dx?.name ?? "Анемия не выявлена",
+                            branch: br,
+                            entry: t,
+                            patient,
+                          })}
+                        />
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {ALL_LAB_KEYS.map((k) => {
+                            const v = t[k as keyof TestEntry] as number | undefined;
+                            if (typeof v !== "number") return null;
+                            const r = getRange(k, patient.gender);
+                            const s = statusOf(v, r);
+                            return (
+                              <div key={k} className="rounded-md border px-2 py-1.5 text-sm">
+                                <div className="text-[11px] text-muted-foreground">{r.label}</div>
+                                <div className="flex items-baseline gap-1">
+                                  <span style={{ color: s === "ok" || s === "na" ? undefined : "var(--destructive)" }} className="font-medium">{v}</span>
+                                  <span className="text-[11px] text-muted-foreground">{r.unit}</span>
+                                  {s === "low" && <Badge variant="destructive" className="ml-auto text-[10px] py-0 px-1.5">↓</Badge>}
+                                  {s === "high" && <Badge variant="destructive" className="ml-auto text-[10px] py-0 px-1.5">↑</Badge>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {t.morphology && (
+                            <div className="rounded-md border px-2 py-1.5 text-sm col-span-2">
+                              <div className="text-[11px] text-muted-foreground">Морфология</div>
+                              <div>{t.morphology}</div>
                             </div>
-                          </div>
-                        );
-                      })}
-                      {t.morphology && (
-                        <div className="rounded-md border px-2 py-1.5 text-sm col-span-2">
-                          <div className="text-[11px] text-muted-foreground">Морфология</div>
-                          <div>{t.morphology}</div>
+                          )}
+                          {t.notes && (
+                            <div className="rounded-md border px-2 py-1.5 text-sm col-span-full">
+                              <div className="text-[11px] text-muted-foreground">Примечания</div>
+                              <div>{t.notes}</div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-              ))
+                );
+              })
+            )}
+
             )}
           </TabsContent>
 
