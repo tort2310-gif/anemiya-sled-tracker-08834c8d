@@ -8,6 +8,7 @@ import { useStore } from "@/hooks/use-store";
 import { ageFrom, exportJson, importJson } from "@/lib/anemia/storage";
 import { diagnose, branchColor, branchLabel, getBranch } from "@/lib/anemia/diagnose";
 import { Activity, Download, Plus, Upload, UserRound } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,19 +35,22 @@ function HomePage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `anemia-tracker-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `anemia_data_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.success("Экспорт завершён", { description: a.download });
   };
 
   const handleImport = (file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
       const ok = importJson(String(reader.result));
-      if (!ok) alert("Не удалось импортировать файл");
+      if (ok) toast.success("Импорт выполнен", { description: file.name });
+      else toast.error("Не удалось импортировать файл");
     };
     reader.readAsText(file);
   };
+
 
   return (
     <div className="min-h-screen bg-background">
