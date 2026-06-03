@@ -88,6 +88,82 @@ function HomePage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
+        {/* Статистика использования алгоритма */}
+        {(() => {
+          const totalPatients = patients.length;
+          const allTests = patients.flatMap((p) => store.tests[p.id] || []);
+          const totalTests = allTests.length;
+          const branchCounts = { micro: 0, normo: 0, macro: 0, unknown: 0 } as Record<string, number>;
+          for (const t of allTests) branchCounts[getBranch(t.mcv)]++;
+          const lastDate = allTests.map((t) => t.date).sort().slice(-1)[0];
+          const topUsers = [...patients]
+            .map((p) => ({ p, n: (store.tests[p.id] || []).length }))
+            .filter((x) => x.n > 0)
+            .sort((a, b) => b.n - a.n)
+            .slice(0, 5);
+          return (
+            <section className="mb-6 rounded-lg border bg-card p-4">
+              <h2 className="text-sm font-semibold mb-3">Статистика использования алгоритма</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Пациентов</div>
+                  <div className="text-2xl font-bold">{totalPatients}</div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Анализов проведено</div>
+                  <div className="text-2xl font-bold">{totalTests}</div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Запусков алгоритма</div>
+                  <div className="text-2xl font-bold">{totalTests}</div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Последняя активность</div>
+                  <div className="text-sm font-semibold">{lastDate || "—"}</div>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs text-muted-foreground mb-2">Распределение по ветвям MCV</div>
+                  <div className="space-y-1.5">
+                    {(["micro", "normo", "macro"] as const).map((b) => {
+                      const n = branchCounts[b] || 0;
+                      const pct = totalTests ? Math.round((n / totalTests) * 100) : 0;
+                      return (
+                        <div key={b} className="flex items-center gap-2 text-xs">
+                          <Badge style={{ background: branchColor(b), color: "white" }}>{branchLabel(b)}</Badge>
+                          <div className="flex-1 h-2 rounded bg-muted overflow-hidden">
+                            <div className="h-full" style={{ width: `${pct}%`, background: branchColor(b) }} />
+                          </div>
+                          <span className="tabular-nums w-16 text-right text-muted-foreground">{n} ({pct}%)</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-2">Кто пользовался чаще всего</div>
+                  {topUsers.length === 0 ? (
+                    <div className="text-xs text-muted-foreground">Пока нет данных</div>
+                  ) : (
+                    <ul className="space-y-1 text-sm">
+                      {topUsers.map(({ p, n }, i) => (
+                        <li key={p.id} className="flex items-center justify-between gap-2">
+                          <span className="truncate">
+                            <span className="text-muted-foreground mr-1">{i + 1}.</span>
+                            {p.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground tabular-nums">{n} анализов</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </section>
+          );
+        })()}
+
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">Пациенты ({patients.length})</h2>
           <Button onClick={() => setAddOpen(true)}>
