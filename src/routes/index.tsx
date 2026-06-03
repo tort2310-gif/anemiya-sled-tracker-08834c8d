@@ -7,8 +7,10 @@ import { PatientForm } from "@/components/anemia/PatientForm";
 import { useStore } from "@/hooks/use-store";
 import { ageFrom, exportJson, importJson } from "@/lib/anemia/storage";
 import { diagnose, branchColor, branchLabel, getBranch } from "@/lib/anemia/diagnose";
-import { Activity, Download, Plus, Upload, UserRound } from "lucide-react";
+import { Activity, Download, LogIn, LogOut, Plus, Shield, Upload, UserRound } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect, useState as useReactState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
