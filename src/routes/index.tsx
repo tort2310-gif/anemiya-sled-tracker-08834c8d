@@ -26,6 +26,22 @@ function HomePage() {
   const store = useStore();
   const [addOpen, setAddOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [userEmail, setUserEmail] = useReactState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user.email ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setUserEmail(s?.user.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Вы вышли");
+  };
 
   const patients = useMemo(
     () => [...store.patients].sort((a, b) => a.name.localeCompare(b.name, "ru")),
