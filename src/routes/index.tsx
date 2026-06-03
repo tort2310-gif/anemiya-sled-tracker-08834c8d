@@ -7,8 +7,10 @@ import { PatientForm } from "@/components/anemia/PatientForm";
 import { useStore } from "@/hooks/use-store";
 import { ageFrom, exportJson, importJson } from "@/lib/anemia/storage";
 import { diagnose, branchColor, branchLabel, getBranch } from "@/lib/anemia/diagnose";
-import { Activity, Download, Plus, Upload, UserRound } from "lucide-react";
+import { Activity, Download, LogIn, LogOut, Plus, Shield, Upload, UserRound } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect, useState as useReactState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,6 +26,22 @@ function HomePage() {
   const store = useStore();
   const [addOpen, setAddOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [userEmail, setUserEmail] = useReactState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user.email ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      setUserEmail(s?.user.email ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Вы вышли");
+  };
 
   const patients = useMemo(
     () => [...store.patients].sort((a, b) => a.name.localeCompare(b.name, "ru")),
@@ -83,6 +101,22 @@ function HomePage() {
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-4 w-4 mr-1.5" /> Экспорт
             </Button>
+            <Link to="/admin">
+              <Button variant="outline" size="sm">
+                <Shield className="h-4 w-4 mr-1.5" /> Админ
+              </Button>
+            </Link>
+            {userEmail ? (
+              <Button variant="ghost" size="sm" onClick={handleSignOut} title={userEmail}>
+                <LogOut className="h-4 w-4 mr-1.5" /> Выйти
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button size="sm">
+                  <LogIn className="h-4 w-4 mr-1.5" /> Войти
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
