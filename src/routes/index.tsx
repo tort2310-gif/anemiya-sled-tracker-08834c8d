@@ -101,6 +101,22 @@ function HomePage() {
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-4 w-4 mr-1.5" /> Экспорт
             </Button>
+            <Link to="/admin">
+              <Button variant="outline" size="sm">
+                <Shield className="h-4 w-4 mr-1.5" /> Админ
+              </Button>
+            </Link>
+            {userEmail ? (
+              <Button variant="ghost" size="sm" onClick={handleSignOut} title={userEmail}>
+                <LogOut className="h-4 w-4 mr-1.5" /> Выйти
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button size="sm">
+                  <LogIn className="h-4 w-4 mr-1.5" /> Войти
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
