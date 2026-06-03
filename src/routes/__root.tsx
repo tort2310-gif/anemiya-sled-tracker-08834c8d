@@ -121,6 +121,25 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    let lastLoggedAt = 0;
+    let unsub: (() => void) | undefined;
+    (async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { logLoginEvent } = await import("@/lib/auth.functions");
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+        if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+          const now = Date.now();
+          if (now - lastLoggedAt < 60_000) return;
+          lastLoggedAt = now;
+          logLoginEvent({ data: { email: session.user.email ?? null } }).catch(() => {});
+        }
+      });
+      unsub = () => data.subscription.unsubscribe();
+    })();
+    return () => unsub?.();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
