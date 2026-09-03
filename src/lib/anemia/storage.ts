@@ -5,6 +5,18 @@ import type { Patient, StoreShape, TestEntry } from "./types";
 // the current user), instead of localStorage — see migration
 // supabase/migrations/20260903120000_add_patients_and_test_entries.sql
 
+// Supabase/Postgrest errors are plain objects, not Error instances —
+// String(err) on them yields "[object Object]". Use this wherever an error
+// from storage.ts is shown to the user (e.g. in a toast).
+export function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === "string" && m) return m;
+  }
+  return "Неизвестная ошибка";
+}
+
 type PatientRow = {
   id: string;
   name: string;
