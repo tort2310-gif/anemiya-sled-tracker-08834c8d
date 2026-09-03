@@ -7,18 +7,30 @@ import {
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { addPatient } from "@/lib/anemia/storage";
+import { useInvalidateStore } from "@/hooks/use-store";
 import type { Gender } from "@/lib/anemia/types";
+import { toast } from "sonner";
 
 export function PatientForm({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState<Gender>("female");
+  const [saving, setSaving] = useState(false);
+  const invalidateStore = useInvalidateStore();
 
-  const submit = () => {
+  const submit = async () => {
     if (!name.trim() || !birthDate) return;
-    addPatient({ name: name.trim(), birthDate, gender });
-    setName(""); setBirthDate(""); setGender("female");
-    onOpenChange(false);
+    setSaving(true);
+    try {
+      await addPatient({ name: name.trim(), birthDate, gender });
+      invalidateStore();
+      setName(""); setBirthDate(""); setGender("female");
+      onOpenChange(false);
+    } catch (err) {
+      toast.error("Не удалось сохранить пациента", { description: String(err) });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -44,7 +56,7 @@ export function PatientForm({ open, onOpenChange }: { open: boolean; onOpenChang
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Отмена</Button>
-          <Button onClick={submit}>Создать</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? "Сохранение…" : "Создать"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
