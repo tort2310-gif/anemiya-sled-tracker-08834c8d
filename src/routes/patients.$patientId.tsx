@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useStore, useInvalidateStore } from "@/hooks/use-store";
-import { ageFrom, deletePatient, deleteTest } from "@/lib/anemia/storage";
+import { ageFrom, deletePatient, deleteTest, errorMessage } from "@/lib/anemia/storage";
 import { supabase } from "@/integrations/supabase/client";
 import { TestWizard } from "@/components/anemia/TestWizard";
 import { StatsDashboard } from "@/components/anemia/StatsDashboard";
@@ -79,7 +79,7 @@ function PatientPage() {
                   invalidateStore();
                   window.history.back();
                 } catch (err) {
-                  toast.error("Не удалось удалить пациента", { description: String(err) });
+                  toast.error("Не удалось удалить пациента", { description: errorMessage(err) });
                 }
               }
             }}
@@ -150,7 +150,7 @@ function PatientPage() {
                                 invalidateStore();
                                 toast.success("Запись удалена");
                               } catch (err) {
-                                toast.error("Не удалось удалить запись", { description: String(err) });
+                                toast.error("Не удалось удалить запись", { description: errorMessage(err) });
                               }
                             }
                           }}
