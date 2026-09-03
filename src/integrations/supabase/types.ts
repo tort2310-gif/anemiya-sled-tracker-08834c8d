@@ -50,6 +50,33 @@ export type Database = {
         }
         Relationships: []
       }
+      patients: {
+        Row: {
+          birth_date: string
+          created_at: string
+          gender: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          birth_date: string
+          created_at?: string
+          gender: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string
+          created_at?: string
+          gender?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -70,6 +97,83 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      test_entries: {
+        Row: {
+          b12: number | null
+          bilirubin_indirect: number | null
+          created_at: string
+          creatinine: number | null
+          date: string
+          epo: number | null
+          ferritin: number | null
+          folate: number | null
+          hb: number | null
+          id: string
+          iron: number | null
+          mcv: number | null
+          morphology: string | null
+          notes: string | null
+          patient_id: string
+          reticulocytes: number | null
+          retic_index: number | null
+          tibc: number | null
+          tsh: number | null
+          user_id: string
+        }
+        Insert: {
+          b12?: number | null
+          bilirubin_indirect?: number | null
+          created_at?: string
+          creatinine?: number | null
+          date: string
+          epo?: number | null
+          ferritin?: number | null
+          folate?: number | null
+          hb?: number | null
+          id?: string
+          iron?: number | null
+          mcv?: number | null
+          morphology?: string | null
+          notes?: string | null
+          patient_id: string
+          reticulocytes?: number | null
+          retic_index?: number | null
+          tibc?: number | null
+          tsh?: number | null
+          user_id: string
+        }
+        Update: {
+          b12?: number | null
+          bilirubin_indirect?: number | null
+          created_at?: string
+          creatinine?: number | null
+          date?: string
+          epo?: number | null
+          ferritin?: number | null
+          folate?: number | null
+          hb?: number | null
+          id?: string
+          iron?: number | null
+          mcv?: number | null
+          morphology?: string | null
+          notes?: string | null
+          patient_id?: string
+          reticulocytes?: number | null
+          retic_index?: number | null
+          tibc?: number | null
+          tsh?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_entries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
