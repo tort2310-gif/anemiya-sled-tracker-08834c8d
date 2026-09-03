@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { addTest, updateTest } from "@/lib/anemia/storage";
+import { addTest, updateTest, errorMessage } from "@/lib/anemia/storage";
 import { useInvalidateStore } from "@/hooks/use-store";
 import type { TestEntry } from "@/lib/anemia/types";
 import { toast } from "sonner";
@@ -95,7 +95,7 @@ export function TestForm({ patientId, open, onOpenChange, initial }: Props) {
       invalidateStore();
       onOpenChange(false);
     } catch (err) {
-      toast.error("Не удалось сохранить анализ", { description: String(err) });
+      toast.error("Не удалось сохранить анализ", { description: errorMessage(err) });
     } finally {
       setSaving(false);
     }
