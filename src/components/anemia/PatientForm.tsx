@@ -6,7 +6,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { addPatient } from "@/lib/anemia/storage";
+import { addPatient, errorMessage } from "@/lib/anemia/storage";
 import { useInvalidateStore } from "@/hooks/use-store";
 import type { Gender } from "@/lib/anemia/types";
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ export function PatientForm({ open, onOpenChange }: { open: boolean; onOpenChang
       setName(""); setBirthDate(""); setGender("female");
       onOpenChange(false);
     } catch (err) {
-      toast.error("Не удалось сохранить пациента", { description: String(err) });
+      toast.error("Не удалось сохранить пациента", { description: errorMessage(err) });
     } finally {
       setSaving(false);
     }
