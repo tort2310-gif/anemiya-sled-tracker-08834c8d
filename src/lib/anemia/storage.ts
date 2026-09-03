@@ -131,7 +131,7 @@ export async function addPatient(p: Omit<Patient, "id" | "createdAt">): Promise<
 }
 
 export async function updatePatient(id: string, patch: Partial<Patient>): Promise<void> {
-  const update: Record<string, unknown> = {};
+  const update: Partial<Pick<PatientRow, "name" | "birth_date" | "gender">> = {};
   if (patch.name !== undefined) update.name = patch.name;
   if (patch.birthDate !== undefined) update.birth_date = patch.birthDate;
   if (patch.gender !== undefined) update.gender = patch.gender;
@@ -179,7 +179,7 @@ export async function updateTest(
   patientId: string,
   patch: Partial<TestEntry>,
 ): Promise<void> {
-  const columnByKey: Record<string, string> = {
+  const columnByKey: Record<keyof Omit<TestEntry, "id" | "patientId">, keyof Omit<TestEntryRow, "id" | "patient_id" | "user_id" | "created_at">> = {
     date: "date",
     mcv: "mcv",
     hb: "hb",
@@ -197,10 +197,10 @@ export async function updateTest(
     morphology: "morphology",
     notes: "notes",
   };
-  const update: Record<string, unknown> = {};
+  const update: Partial<Omit<TestEntryRow, "id" | "patient_id" | "user_id" | "created_at">> = {};
   for (const [key, column] of Object.entries(columnByKey)) {
     const value = (patch as Record<string, unknown>)[key];
-    if (value !== undefined) update[column] = value;
+    if (value !== undefined) (update as Record<string, unknown>)[column] = value;
   }
   const { error } = await supabase
     .from("test_entries")
