@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PatientForm } from "@/components/anemia/PatientForm";
-import { useStore } from "@/hooks/use-store";
+import { useStore, useInvalidateStore } from "@/hooks/use-store";
 import { ageFrom, exportJson, importJson } from "@/lib/anemia/storage";
 import { diagnose, branchColor, branchLabel, getBranch } from "@/lib/anemia/diagnose";
 import { Activity, Download, LogIn, LogOut, Plus, Shield, Upload, UserRound } from "lucide-react";
@@ -13,6 +13,12 @@ import { useEffect, useState as useReactState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/auth" });
+    return { user: data.user };
+  },
   head: () => ({
     meta: [
       { title: "Трекер анемии — анализы и динамика" },
@@ -24,6 +30,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const store = useStore();
+  const invalidateStore = useInvalidateStore();
   const [addOpen, setAddOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [userEmail, setUserEmail] = useReactState<string | null>(null);
@@ -48,23 +55,32 @@ function HomePage() {
     [store.patients],
   );
 
-  const handleExport = () => {
-    const blob = new Blob([exportJson()], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `anemia_data_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Экспорт завершён", { description: a.download });
+  const handleExport = async () => {
+    try {
+      const json = await exportJson();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `anemia_data_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Экспорт завершён", { description: a.download });
+    } catch (err) {
+      toast.error("Не удалось экспортировать данные", { description: String(err) });
+    }
   };
 
   const handleImport = (file: File) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const ok = importJson(String(reader.result));
-      if (ok) toast.success("Импорт выполнен", { description: file.name });
-      else toast.error("Не удалось импортировать файл");
+    reader.onload = async () => {
+      const ok = await importJson(String(reader.result));
+      if (ok) {
+        invalidateStore();
+        toast.success("Импорт выполнен", { description: file.name });
+      } else {
+        toast.error("Не удалось импортировать файл");
+      }
     };
     reader.readAsText(file);
   };
@@ -205,7 +221,11 @@ function HomePage() {
           </Button>
         </div>
 
-        {patients.length === 0 ? (
+        {store.isLoading ? (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">Загрузка…</CardContent>
+          </Card>
+        ) : patients.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
               Пока нет пациентов. Нажмите «Добавить пациента», чтобы начать.
