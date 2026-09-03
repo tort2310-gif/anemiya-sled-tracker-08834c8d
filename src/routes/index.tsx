@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PatientForm } from "@/components/anemia/PatientForm";
 import { useStore, useInvalidateStore } from "@/hooks/use-store";
-import { ageFrom, exportJson, importJson } from "@/lib/anemia/storage";
+import { ageFrom, exportJson, importJson, errorMessage } from "@/lib/anemia/storage";
 import { diagnose, branchColor, branchLabel, getBranch } from "@/lib/anemia/diagnose";
 import { Activity, Download, LogIn, LogOut, Plus, Shield, Upload, UserRound } from "lucide-react";
 import { toast } from "sonner";
@@ -67,7 +67,7 @@ function HomePage() {
       URL.revokeObjectURL(url);
       toast.success("Экспорт завершён", { description: a.download });
     } catch (err) {
-      toast.error("Не удалось экспортировать данные", { description: String(err) });
+      toast.error("Не удалось экспортировать данные", { description: errorMessage(err) });
     }
   };
 
