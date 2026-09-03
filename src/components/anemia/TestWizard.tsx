@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import { addTest, updateTest } from "@/lib/anemia/storage";
+import { addTest, updateTest, errorMessage } from "@/lib/anemia/storage";
 import { useInvalidateStore } from "@/hooks/use-store";
 import { getRange, statusOf } from "@/lib/anemia/ranges";
 import { branchColor, branchLabel, diagnose, getBranch } from "@/lib/anemia/diagnose";
@@ -157,7 +157,7 @@ export function TestWizard({ patient, open, onOpenChange, initial }: Props) {
       toast.success("Сохранено ✓", { description: `Анализ от ${d.date} сохранён в профиль` });
       onOpenChange(false);
     } catch (err) {
-      toast.error("Данные не сохранены", { description: String(err) });
+      toast.error("Данные не сохранены", { description: errorMessage(err) });
     } finally {
       setSaving(false);
     }
