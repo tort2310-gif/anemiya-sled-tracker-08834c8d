@@ -12,7 +12,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { addTest, updateTest } from "@/lib/anemia/storage";
+import { useInvalidateStore } from "@/hooks/use-store";
 import type { TestEntry } from "@/lib/anemia/types";
+import { toast } from "sonner";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -46,6 +48,8 @@ export function TestForm({ patientId, open, onOpenChange, initial }: Props) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [morphology, setMorphology] = useState("");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+  const invalidateStore = useInvalidateStore();
 
   useEffect(() => {
     if (open) {
@@ -68,7 +72,7 @@ export function TestForm({ patientId, open, onOpenChange, initial }: Props) {
     }
   }, [open, initial]);
 
-  const submit = () => {
+  const submit = async () => {
     const numeric: Partial<TestEntry> = {};
     for (const f of NUMERIC_FIELDS) {
       const raw = values[f.key as string];
@@ -84,9 +88,17 @@ export function TestForm({ patientId, open, onOpenChange, initial }: Props) {
       morphology: morphology || undefined,
       notes: notes || undefined,
     } as Omit<TestEntry, "id">;
-    if (initial) updateTest(initial.id, patientId, data);
-    else addTest(data);
-    onOpenChange(false);
+    setSaving(true);
+    try {
+      if (initial) await updateTest(initial.id, patientId, data);
+      else await addTest(data);
+      invalidateStore();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error("Не удалось сохранить анализ", { description: String(err) });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -141,7 +153,7 @@ export function TestForm({ patientId, open, onOpenChange, initial }: Props) {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Отмена</Button>
-          <Button onClick={submit}>Сохранить</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? "Сохранение…" : "Сохранить"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
