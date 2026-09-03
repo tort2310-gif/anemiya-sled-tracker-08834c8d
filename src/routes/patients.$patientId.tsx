@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,8 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useStore } from "@/hooks/use-store";
+import { useStore, useInvalidateStore } from "@/hooks/use-store";
 import { ageFrom, deletePatient, deleteTest } from "@/lib/anemia/storage";
+import { supabase } from "@/integrations/supabase/client";
 import { TestWizard } from "@/components/anemia/TestWizard";
 import { StatsDashboard } from "@/components/anemia/StatsDashboard";
 import { DiagnosisResultCard } from "@/components/anemia/DiagnosisResultCard";
@@ -17,6 +18,12 @@ import type { TestEntry } from "@/lib/anemia/types";
 import { ALL_LAB_KEYS, getRange, statusOf } from "@/lib/anemia/ranges";
 
 export const Route = createFileRoute("/patients/$patientId")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/auth" });
+    return { user: data.user };
+  },
   head: () => ({ meta: [{ title: "Пациент — Трекер анемии" }] }),
   component: PatientPage,
 });
@@ -24,6 +31,7 @@ export const Route = createFileRoute("/patients/$patientId")({
 function PatientPage() {
   const { patientId } = useParams({ from: "/patients/$patientId" });
   const store = useStore();
+  const invalidateStore = useInvalidateStore();
   const patient = store.patients.find((p) => p.id === patientId);
   const tests = useMemo(
     () => [...(store.tests[patientId] || [])].sort((a, b) => a.date.localeCompare(b.date)),
@@ -38,7 +46,9 @@ function PatientPage() {
     return (
       <div className="min-h-screen grid place-items-center p-6">
         <div className="text-center">
-          <p className="text-muted-foreground mb-3">Пациент не найден.</p>
+          <p className="text-muted-foreground mb-3">
+            {store.isLoading ? "Загрузка…" : "Пациент не найден."}
+          </p>
           <Link to="/"><Button variant="outline"><ArrowLeft className="h-4 w-4 mr-1.5" />На главную</Button></Link>
         </div>
       </div>
@@ -62,10 +72,15 @@ function PatientPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
+            onClick={async () => {
               if (confirm(`Удалить пациента «${patient.name}» и все его анализы?`)) {
-                deletePatient(patient.id);
-                window.history.back();
+                try {
+                  await deletePatient(patient.id);
+                  invalidateStore();
+                  window.history.back();
+                } catch (err) {
+                  toast.error("Не удалось удалить пациента", { description: String(err) });
+                }
               }
             }}
           >
@@ -128,10 +143,15 @@ function PatientPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => {
+                          onClick={async () => {
                             if (confirm("Удалить запись?")) {
-                              deleteTest(t.id, patient.id);
-                              toast.success("Запись удалена");
+                              try {
+                                await deleteTest(t.id, patient.id);
+                                invalidateStore();
+                                toast.success("Запись удалена");
+                              } catch (err) {
+                                toast.error("Не удалось удалить запись", { description: String(err) });
+                              }
                             }
                           }}
                         ><Trash2 className="h-4 w-4" /></Button>
