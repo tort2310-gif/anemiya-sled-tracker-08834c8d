@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { addTest, updateTest } from "@/lib/anemia/storage";
+import { useInvalidateStore } from "@/hooks/use-store";
 import { getRange, statusOf } from "@/lib/anemia/ranges";
 import { branchColor, branchLabel, diagnose, getBranch } from "@/lib/anemia/diagnose";
 import { explain } from "@/lib/anemia/explain";
@@ -69,6 +70,8 @@ function FieldNum({
 export function TestWizard({ patient, open, onOpenChange, initial }: Props) {
   const [step, setStep] = useState(1);
   const [d, setD] = useState<Draft>({ date: today(), nums: {}, notes: "" });
+  const [saving, setSaving] = useState(false);
+  const invalidateStore = useInvalidateStore();
 
   useEffect(() => {
     if (!open) return;
@@ -126,7 +129,7 @@ export function TestWizard({ patient, open, onOpenChange, initial }: Props) {
   const customDx = useMemo(() => deriveDiagnosis(entryPreview, patient, d), [entryPreview, patient, d]);
   const dx = customDx || diagnose(entryPreview, patient);
 
-  const save = () => {
+  const save = async () => {
     const payload: Omit<TestEntry, "id"> = {
       patientId: patient.id,
       date: d.date,
@@ -146,13 +149,17 @@ export function TestWizard({ patient, open, onOpenChange, initial }: Props) {
       morphology: d.morphology || undefined,
       notes: buildNotes(d),
     };
+    setSaving(true);
     try {
-      if (initial) updateTest(initial.id, patient.id, payload);
-      else addTest(payload);
+      if (initial) await updateTest(initial.id, patient.id, payload);
+      else await addTest(payload);
+      invalidateStore();
       toast.success("Сохранено ✓", { description: `Анализ от ${d.date} сохранён в профиль` });
       onOpenChange(false);
     } catch (err) {
       toast.error("Данные не сохранены", { description: String(err) });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -378,7 +385,7 @@ export function TestWizard({ patient, open, onOpenChange, initial }: Props) {
                 Далее <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             ) : (
-              <Button onClick={save}>Сохранить</Button>
+              <Button onClick={save} disabled={saving}>{saving ? "Сохранение…" : "Сохранить"}</Button>
             )}
           </div>
         </DialogFooter>
