@@ -80,7 +80,7 @@ function AdminPage() {
             <CardContent className="pt-6 space-y-3">
               <p className="text-sm text-destructive">{(error as Error).message}</p>
               <p className="text-sm text-muted-foreground">
-                Если вы первый пользователь — назначьте себя администратором:
+                Если это ваш (владельца проекта) аккаунт — назначьте себя администратором:
               </p>
               <Button onClick={handleClaim} size="sm">
                 Стать администратором
