@@ -96,10 +96,26 @@ export const getAdminStats = createServerFn({ method: "GET" })
     };
   });
 
+// Only this email may ever claim the admin role — closes the "first
+// authenticated visitor becomes admin" hole (anyone could previously sign up
+// on the public /auth page and grab admin before the real owner did).
+const OWNER_EMAIL = "tort2310@gmail.com";
+
 export const claimAdminIfFirst = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("email")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    if (!profile?.email || profile.email.toLowerCase() !== OWNER_EMAIL.toLowerCase()) {
+      return { granted: false };
+    }
+
     const { count } = await supabaseAdmin
       .from("user_roles")
       .select("*", { count: "exact", head: true })
