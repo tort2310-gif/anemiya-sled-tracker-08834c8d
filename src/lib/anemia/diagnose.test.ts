@@ -37,38 +37,56 @@ describe("diagnose — micro branch (MCV < 80)", () => {
     expect(dx.branch).toBe("micro");
   });
 
-  it("#3 Сидеробластная анемия: Ферритин↑ + кольца сидеробластов в мазке", () => {
-    const dx = diagnose(
-      entry({ mcv: 70, ferritin: 300, morphology: "Кольца сидеробластов" }),
-      patient(),
-    );
+  it("#3 Сидеробластная анемия: Ферритин↑ + структурное поле sideroblasts=true (проверяется раньше остальных)", () => {
+    const dx = diagnose(entry({ mcv: 70, ferritin: 300, sideroblasts: true }), patient());
     expect(dx.number).toBe(3);
   });
 
-  it("#2 Талассемия: паттерн электрофореза (Ферритин в норме)", () => {
-    const dx = diagnose(
-      entry({ mcv: 70, ferritin: 50, morphology: "Электрофорез: HbA2 повышен" }),
-      patient(),
-    );
+  it("#2 Талассемия (β): структурное поле electrophoresis='beta_high'", () => {
+    const dx = diagnose(entry({ mcv: 70, electrophoresis: "beta_high" }), patient());
     expect(dx.number).toBe(2);
   });
 
-  it("#5 Гемоглобинопатия (HbS/HbC): мишеневидные/серповидные клетки", () => {
-    const dx = diagnose(
-      entry({ mcv: 70, ferritin: 50, morphology: "Мишеневидные клетки" }),
-      patient(),
-    );
+  it("#4 Микроцитарная анемия (нестабильные Hb): морфология", () => {
+    const dx = diagnose(entry({ mcv: 70, morphology: "Нестабильные гемоглобины" }), patient());
+    expect(dx.number).toBe(4);
+  });
+
+  it("#5 HS наследственный сфероцитоз: сфероциты в мазке", () => {
+    const dx = diagnose(entry({ mcv: 70, morphology: "Сфероциты" }), patient());
     expect(dx.number).toBe(5);
   });
 
-  it("#6 АХЗ (микроцитарный вариант): Ферритин↑ без других находок", () => {
-    const dx = diagnose(entry({ mcv: 70, ferritin: 300 }), patient());
+  it("#6 Серповидно-клеточная анемия: серповидные клетки в мазке", () => {
+    const dx = diagnose(entry({ mcv: 70, morphology: "Серповидные клетки" }), patient());
     expect(dx.number).toBe(6);
   });
 
-  it("#7 Прочая микроцитарная: без чёткого паттерна", () => {
-    const dx = diagnose(entry({ mcv: 70 }), patient());
+  it("#7 Отравление свинцом: свинец в крови ↑ (хроническая экспозиция)", () => {
+    const dx = diagnose(entry({ mcv: 70, leadBlood: 10 }), patient());
     expect(dx.number).toBe(7);
+  });
+
+  it("#7 Отравление свинцом: свинец в моче ↑ (недавняя экспозиция)", () => {
+    const dx = diagnose(entry({ mcv: 70, leadUrine: 100 }), patient());
+    expect(dx.number).toBe(7);
+  });
+
+  it("#7 Отравление свинцом: срабатывает и по упоминанию в примечаниях (когда лаб. данных нет)", () => {
+    const dx = diagnose(entry({ mcv: 70, notes: "контакт со свинцом на работе" }), patient());
+    expect(dx.number).toBe(7);
+  });
+
+  it("возвращает №0 (недостаточно данных) и намекает на альфа-талассемию, если электрофорез в норме, а железо/ферритин тоже в норме", () => {
+    const dx = diagnose(entry({ mcv: 70, electrophoresis: "alpha_norm", iron: 15, ferritin: 50 }), patient());
+    expect(dx.number).toBe(0);
+    expect(dx.reasons.join(" ")).toMatch(/альфа-талассемия/i);
+  });
+
+  it("возвращает №0 (недостаточно данных), если ни один специфический паттерн не подтверждён", () => {
+    const dx = diagnose(entry({ mcv: 70 }), patient());
+    expect(dx.number).toBe(0);
+    expect(dx.branch).toBe("micro");
   });
 });
 
@@ -78,95 +96,111 @@ describe("diagnose — normo branch (83 ≤ MCV ≤ 93)", () => {
     expect(dx.number).toBe(8);
   });
 
-  it("#10 Почечная анемия: Креатинин↑", () => {
+  it("#9 Анемия хр. заболеваний: Креатинин↑, ЭПО не проверяется/в норме", () => {
     const dx = diagnose(entry({ mcv: 88, creatinine: 120 }), patient("female"));
-    expect(dx.number).toBe(10);
-  });
-
-  it("#9 АХЗ: Ферритин↑ (ТТГ и креатинин в норме)", () => {
-    const dx = diagnose(entry({ mcv: 88, ferritin: 300 }), patient());
     expect(dx.number).toBe(9);
   });
 
-  it("#11 Апластическая/гипопластическая анемия: Ретикулоциты↓", () => {
-    const dx = diagnose(entry({ mcv: 88, reticulocytes: 0.2 }), patient());
+  it("#9 срабатывает и по одной лишь мочевине (без креатинина)", () => {
+    const dx = diagnose(entry({ mcv: 88, urea: 10 }), patient());
+    expect(dx.number).toBe(9);
+  });
+
+  it("#10 Дизэритропоэтическая (почечная) анемия: Креатинин↑ И ЭПО↓", () => {
+    const dx = diagnose(entry({ mcv: 88, creatinine: 120, epo: 2 }), patient());
+    expect(dx.number).toBe(10);
+  });
+
+  it("#11 Смешанная анемия хр. заболеваний: УЗИ — патология вне печени", () => {
+    const dx = diagnose(entry({ mcv: 88, uziFinding: "abdominal" }), patient());
     expect(dx.number).toBe(11);
   });
 
-  it("#12 Нормоцитарная анемия смешанного генеза: без чёткого паттерна", () => {
-    const dx = diagnose(entry({ mcv: 88 }), patient());
+  it("#12 Гемосидероз: УЗИ — патология печени", () => {
+    const dx = diagnose(entry({ mcv: 88, uziFinding: "liver" }), patient());
     expect(dx.number).toBe(12);
+  });
+
+  it("перекрёстный переход: дисплазия в мазке при нормальном MCV уходит в №19 (МДС)", () => {
+    const dx = diagnose(entry({ mcv: 88, morphology: "Признаки дисплазии" }), patient());
+    expect(dx.number).toBe(19);
+  });
+
+  it("перекрёстный переход: шизоциты в мазке при нормальном MCV уходят в №20 (микроангиопатическая ГА)", () => {
+    const dx = diagnose(entry({ mcv: 88, morphology: "Шизоциты" }), patient());
+    expect(dx.number).toBe(20);
+  });
+
+  it("возвращает №0 (недостаточно данных), если ТТГ/почки/УЗИ ничего не выявили", () => {
+    const dx = diagnose(entry({ mcv: 88 }), patient());
+    expect(dx.number).toBe(0);
   });
 
   it("применяет пол-специфичный диапазон креатинина (100 — норма для мужчин, повышено для женщин)", () => {
     const male = diagnose(entry({ mcv: 88, creatinine: 100 }), patient("male"));
     const female = diagnose(entry({ mcv: 88, creatinine: 100 }), patient("female"));
-    expect(male.number).toBe(12); // 100 в пределах мужской нормы (62–115) → нет чёткого паттерна
-    expect(female.number).toBe(10); // 100 выше женской нормы (44–97) → почечная анемия
+    expect(male.number).toBe(0); // 100 в пределах мужской нормы (62–115) → ничего не выявлено
+    expect(female.number).toBe(9); // 100 выше женской нормы (44–97) → анемия хр. заболеваний
   });
 });
 
 describe("diagnose — macro branch (MCV > 93)", () => {
-  it("#13 Гемолитическая анемия: Ретикулоциты↑ + Билирубин непрямой↑", () => {
-    const dx = diagnose(
-      entry({ mcv: 96, reticulocytes: 5, bilirubinIndirect: 25 }),
-      patient(),
-    );
+  it("#18 ГУС/ТТП: тромбоциты↓ + ЛДГ↑ + шизоциты — теперь ДОСТИЖИМ (проверяется раньше остальных)", () => {
+    const dx = diagnose(entry({ mcv: 96, platelets: 100, ldh: 300, morphology: "Шизоциты" }), patient());
+    expect(dx.number).toBe(18);
+  });
+
+  it("#13 Гемолитическая анемия: Ретикулоциты↑ + Билирубин непрямой↑, триггер не уточнён", () => {
+    const dx = diagnose(entry({ mcv: 96, reticulocytes: 5, bilirubinIndirect: 25 }), patient());
     expect(dx.number).toBe(13);
   });
 
+  it("#13/#14 предпочитают ретикулоцитарный индекс сырому % ретикулоцитов", () => {
+    // Сырые ретикулоциты выглядят "высокими", но скорректированный индекс говорит об
+    // неадекватном ответе костного мозга — функция должна использовать именно индекс.
+    const dx = diagnose(entry({ mcv: 96, reticulocytes: 5, reticIndex: 1, bilirubinIndirect: 25 }), patient());
+    expect(dx.number).not.toBe(13);
+    expect(dx.number).not.toBe(15);
+  });
+
+  it("#14 RBC-повреждение (вирус): Ретикулоциты↑ + Билирубин↑ + триггер вирусный", () => {
+    const dx = diagnose(entry({ mcv: 96, reticulocytes: 5, bilirubinIndirect: 25, hemolysisTrigger: "viral" }), patient());
+    expect(dx.number).toBe(14);
+  });
+
+  it("#14 RBC-повреждение (аутоиммунное): Ретикулоциты↑ + Билирубин↑ + триггер аутоиммунный", () => {
+    const dx = diagnose(entry({ mcv: 96, reticulocytes: 5, bilirubinIndirect: 25, hemolysisTrigger: "autoimmune" }), patient());
+    expect(dx.number).toBe(14);
+  });
+
   it("#15 Острая кровопотеря: Ретикулоциты↑, билирубин в норме", () => {
-    const dx = diagnose(
-      entry({ mcv: 96, reticulocytes: 5, bilirubinIndirect: 10 }),
-      patient(),
-    );
+    const dx = diagnose(entry({ mcv: 96, reticulocytes: 5, bilirubinIndirect: 10 }), patient());
     expect(dx.number).toBe(15);
   });
 
-  it("#16 B12-дефицитная (пернициозная) анемия: B12↓", () => {
+  it("#16 Пернициозная (B12-дефицитная) анемия: B12↓", () => {
     const dx = diagnose(entry({ mcv: 96, b12: 100 }), patient());
     expect(dx.number).toBe(16);
   });
 
-  it("#17 Фолат-дефицитная анемия: Фолат↓ (B12 в норме)", () => {
+  it("#17 Фолат/кобаламин-зависимая анемия: Фолат↓ (B12 в норме)", () => {
     const dx = diagnose(entry({ mcv: 96, b12: 300, folate: 5 }), patient());
     expect(dx.number).toBe(17);
   });
 
-  it("#20 Микроангиопатическая гемолитическая анемия: шизоциты в мазке", () => {
-    const dx = diagnose(
-      entry({ mcv: 96, b12: 300, folate: 20, morphology: "Шизоциты" }),
-      patient(),
-    );
+  it("#20 Микроангиопатическая ГА: шизоциты в мазке (без тромбоцитопении/ЛДГ↑ — не №18)", () => {
+    const dx = diagnose(entry({ mcv: 96, b12: 300, folate: 20, morphology: "Шизоциты" }), patient());
     expect(dx.number).toBe(20);
   });
 
   it("#19 Миелодиспластический синдром: признаки дисплазии", () => {
-    const dx = diagnose(
-      entry({ mcv: 96, b12: 300, folate: 20, morphology: "Признаки дисплазии" }),
-      patient(),
-    );
+    const dx = diagnose(entry({ mcv: 96, b12: 300, folate: 20, morphology: "Признаки дисплазии" }), patient());
     expect(dx.number).toBe(19);
   });
 
-  it("#14 Прочая макроцитарная: без чёткого паттерна", () => {
+  it("возвращает №0 (недостаточно данных), если ретикулоцитарный индекс/билирубин/B12/фолат/морфология не дали чёткого паттерна", () => {
     const dx = diagnose(entry({ mcv: 96, b12: 300, folate: 20 }), patient());
-    expect(dx.number).toBe(14);
-  });
-
-  it("документирует существующий баг: диагноз №18 (ГУС/ТТП) в diagnose() недостижим", () => {
-    // В diagnose.ts проверка `if (reticHigh) return №18` стоит ПОСЛЕ
-    // `if (reticHigh && !biliHigh) return №15` — а эти два условия вместе
-    // покрывают уже все случаи reticHigh===true (билирубин либо высокий,
-    // либо нет). Поэтому код до строки с №18 никогда не доходит с
-    // reticHigh===true. Тест фиксирует текущее поведение "как есть" —
-    // если понадобится действительно чинить diagnose.ts, начните отсюда.
-    const dx = diagnose(
-      entry({ mcv: 96, reticulocytes: 5, bilirubinIndirect: 10 }),
-      patient(),
-    );
-    expect(dx.number).not.toBe(18);
-    expect(dx.number).toBe(15);
+    expect(dx.number).toBe(0);
   });
 });
 
