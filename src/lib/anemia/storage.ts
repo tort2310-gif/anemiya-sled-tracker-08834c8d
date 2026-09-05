@@ -1,9 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Patient, StoreShape, TestEntry } from "./types";
 
-// Data now lives in Supabase (tables `patients` / `test_entries`, RLS scoped to
-// the current user), instead of localStorage — see migration
-// supabase/migrations/20260903120000_add_patients_and_test_entries.sql
+// Data lives in Supabase (tables `patients` / `test_entries`, RLS scoped to
+// the current user) — see migrations:
+//   supabase/migrations/20260903120000_add_patients_and_test_entries.sql
+//   supabase/migrations/20260905000000_add_diagnostic_detail_fields.sql
 
 // Supabase/Postgrest errors are plain objects, not Error instances —
 // String(err) on them yields "[object Object]". Use this wherever an error
@@ -34,14 +35,40 @@ type TestEntryRow = {
   iron: number | null;
   tibc: number | null;
   ferritin: number | null;
+  electrophoresis: string | null;
+  sideroblasts: boolean | null;
+  lead_blood: number | null;
+  lead_urine: number | null;
   tsh: number | null;
+  creatinine: number | null;
+  urea: number | null;
+  uric_acid: number | null;
+  total_protein: number | null;
+  epo: number | null;
+  gfr: number | null;
+  ft3: number | null;
+  ft4: number | null;
+  uzi_finding: string | null;
+  aldosterone: number | null;
+  renin: number | null;
+  acth: number | null;
+  prolactin: number | null;
+  cortisol: number | null;
+  c_peptide: number | null;
+  glucose: number | null;
+  hba1c: number | null;
+  alt: number | null;
+  ast: number | null;
+  bilirubin_direct: number | null;
   reticulocytes: number | null;
   retic_index: number | null;
   bilirubin_indirect: number | null;
-  creatinine: number | null;
   b12: number | null;
   folate: number | null;
-  epo: number | null;
+  hemolysis_trigger: string | null;
+  platelets: number | null;
+  ldh: number | null;
+  organomegaly: string | null;
   morphology: string | null;
   notes: string | null;
 };
@@ -66,14 +93,40 @@ function mapTestRow(row: TestEntryRow): TestEntry {
     iron: row.iron ?? undefined,
     tibc: row.tibc ?? undefined,
     ferritin: row.ferritin ?? undefined,
+    electrophoresis: (row.electrophoresis as TestEntry["electrophoresis"]) ?? undefined,
+    sideroblasts: row.sideroblasts ?? undefined,
+    leadBlood: row.lead_blood ?? undefined,
+    leadUrine: row.lead_urine ?? undefined,
     tsh: row.tsh ?? undefined,
+    creatinine: row.creatinine ?? undefined,
+    urea: row.urea ?? undefined,
+    uricAcid: row.uric_acid ?? undefined,
+    totalProtein: row.total_protein ?? undefined,
+    epo: row.epo ?? undefined,
+    gfr: row.gfr ?? undefined,
+    ft3: row.ft3 ?? undefined,
+    ft4: row.ft4 ?? undefined,
+    uziFinding: (row.uzi_finding as TestEntry["uziFinding"]) ?? undefined,
+    aldosterone: row.aldosterone ?? undefined,
+    renin: row.renin ?? undefined,
+    acth: row.acth ?? undefined,
+    prolactin: row.prolactin ?? undefined,
+    cortisol: row.cortisol ?? undefined,
+    cPeptide: row.c_peptide ?? undefined,
+    glucose: row.glucose ?? undefined,
+    hba1c: row.hba1c ?? undefined,
+    alt: row.alt ?? undefined,
+    ast: row.ast ?? undefined,
+    bilirubinDirect: row.bilirubin_direct ?? undefined,
     reticulocytes: row.reticulocytes ?? undefined,
     reticIndex: row.retic_index ?? undefined,
     bilirubinIndirect: row.bilirubin_indirect ?? undefined,
-    creatinine: row.creatinine ?? undefined,
     b12: row.b12 ?? undefined,
     folate: row.folate ?? undefined,
-    epo: row.epo ?? undefined,
+    hemolysisTrigger: (row.hemolysis_trigger as TestEntry["hemolysisTrigger"]) ?? undefined,
+    platelets: row.platelets ?? undefined,
+    ldh: row.ldh ?? undefined,
+    organomegaly: (row.organomegaly as TestEntry["organomegaly"]) ?? undefined,
     morphology: row.morphology ?? undefined,
     notes: row.notes ?? undefined,
   };
@@ -131,7 +184,7 @@ export async function addPatient(p: Omit<Patient, "id" | "createdAt">): Promise<
 }
 
 export async function updatePatient(id: string, patch: Partial<Patient>): Promise<void> {
-  const update: Partial<Pick<PatientRow, "name" | "birth_date" | "gender">> = {};
+  const update: Record<string, unknown> = {};
   if (patch.name !== undefined) update.name = patch.name;
   if (patch.birthDate !== undefined) update.birth_date = patch.birthDate;
   if (patch.gender !== undefined) update.gender = patch.gender;
@@ -144,30 +197,66 @@ export async function deletePatient(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// camelCase TestEntry key -> snake_case DB column, for every optional lab field.
+const TEST_ENTRY_COLUMNS: Record<string, string> = {
+  date: "date",
+  mcv: "mcv",
+  hb: "hb",
+  iron: "iron",
+  tibc: "tibc",
+  ferritin: "ferritin",
+  electrophoresis: "electrophoresis",
+  sideroblasts: "sideroblasts",
+  leadBlood: "lead_blood",
+  leadUrine: "lead_urine",
+  tsh: "tsh",
+  creatinine: "creatinine",
+  urea: "urea",
+  uricAcid: "uric_acid",
+  totalProtein: "total_protein",
+  epo: "epo",
+  gfr: "gfr",
+  ft3: "ft3",
+  ft4: "ft4",
+  uziFinding: "uzi_finding",
+  aldosterone: "aldosterone",
+  renin: "renin",
+  acth: "acth",
+  prolactin: "prolactin",
+  cortisol: "cortisol",
+  cPeptide: "c_peptide",
+  glucose: "glucose",
+  hba1c: "hba1c",
+  alt: "alt",
+  ast: "ast",
+  bilirubinDirect: "bilirubin_direct",
+  reticulocytes: "reticulocytes",
+  reticIndex: "retic_index",
+  bilirubinIndirect: "bilirubin_indirect",
+  b12: "b12",
+  folate: "folate",
+  hemolysisTrigger: "hemolysis_trigger",
+  platelets: "platelets",
+  ldh: "ldh",
+  organomegaly: "organomegaly",
+  morphology: "morphology",
+  notes: "notes",
+};
+
+function toRow(t: Partial<TestEntry>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+  for (const [key, column] of Object.entries(TEST_ENTRY_COLUMNS)) {
+    const value = (t as Record<string, unknown>)[key];
+    if (value !== undefined) row[column] = value;
+  }
+  return row;
+}
+
 export async function addTest(t: Omit<TestEntry, "id">): Promise<TestEntry> {
   const userId = await currentUserId();
   const { data, error } = await supabase
     .from("test_entries")
-    .insert({
-      user_id: userId,
-      patient_id: t.patientId,
-      date: t.date,
-      mcv: t.mcv ?? null,
-      hb: t.hb ?? null,
-      iron: t.iron ?? null,
-      tibc: t.tibc ?? null,
-      ferritin: t.ferritin ?? null,
-      tsh: t.tsh ?? null,
-      reticulocytes: t.reticulocytes ?? null,
-      retic_index: t.reticIndex ?? null,
-      bilirubin_indirect: t.bilirubinIndirect ?? null,
-      creatinine: t.creatinine ?? null,
-      b12: t.b12 ?? null,
-      folate: t.folate ?? null,
-      epo: t.epo ?? null,
-      morphology: t.morphology ?? null,
-      notes: t.notes ?? null,
-    })
+    .insert({ user_id: userId, patient_id: t.patientId, ...toRow(t) })
     .select()
     .single();
   if (error) throw error;
@@ -179,32 +268,9 @@ export async function updateTest(
   patientId: string,
   patch: Partial<TestEntry>,
 ): Promise<void> {
-  const columnByKey: Record<keyof Omit<TestEntry, "id" | "patientId">, keyof Omit<TestEntryRow, "id" | "patient_id" | "user_id" | "created_at">> = {
-    date: "date",
-    mcv: "mcv",
-    hb: "hb",
-    iron: "iron",
-    tibc: "tibc",
-    ferritin: "ferritin",
-    tsh: "tsh",
-    reticulocytes: "reticulocytes",
-    reticIndex: "retic_index",
-    bilirubinIndirect: "bilirubin_indirect",
-    creatinine: "creatinine",
-    b12: "b12",
-    folate: "folate",
-    epo: "epo",
-    morphology: "morphology",
-    notes: "notes",
-  };
-  const update: Partial<Omit<TestEntryRow, "id" | "patient_id" | "user_id" | "created_at">> = {};
-  for (const [key, column] of Object.entries(columnByKey)) {
-    const value = (patch as Record<string, unknown>)[key];
-    if (value !== undefined) (update as Record<string, unknown>)[column] = value;
-  }
   const { error } = await supabase
     .from("test_entries")
-    .update(update)
+    .update(toRow(patch))
     .eq("id", id)
     .eq("patient_id", patientId);
   if (error) throw error;
