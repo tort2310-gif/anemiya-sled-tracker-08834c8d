@@ -66,18 +66,22 @@ export const logLoginEvent = createServerFn({ method: "POST" })
 export const getAdminStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    // role check
-    const { data: roles } = await supabase
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Check the authenticated user's role server-side. Using the privileged
+    // client here avoids a stale/filtered RLS result while keeping the caller
+    // identity anchored to the validated bearer token.
+    const { data: adminRole, error: roleError } = await supabaseAdmin
       .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    const isAdmin = (roles ?? []).some((r) => r.role === "admin");
-    if (!isAdmin) {
+      .select("id")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleError || !adminRole) {
       throw new Error("Доступ запрещён — нужны права администратора");
     }
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [profilesRes, eventsRes] = await Promise.all([
       supabaseAdmin
         .from("profiles")
