@@ -24,7 +24,7 @@ export const Route = createFileRoute("/patients/$patientId")({
     if (error || !data.user) throw redirect({ to: "/auth" });
     return { user: data.user };
   },
-  head: () => ({ meta: [{ title: "Пациент — Трекер анемии" }] }),
+  head: () => ({ meta: [{ title: "Пацієнт — Трекер анемії" }] }),
   component: PatientPage,
 });
 
@@ -47,9 +47,9 @@ function PatientPage() {
       <div className="min-h-screen grid place-items-center p-6">
         <div className="text-center">
           <p className="text-muted-foreground mb-3">
-            {store.isLoading ? "Загрузка…" : "Пациент не найден."}
+            {store.isLoading ? "Завантаження…" : "Пацієнта не знайдено."}
           </p>
-          <Link to="/"><Button variant="outline"><ArrowLeft className="h-4 w-4 mr-1.5" />На главную</Button></Link>
+          <Link to="/"><Button variant="outline"><ArrowLeft className="h-4 w-4 mr-1.5" />На головну</Button></Link>
         </div>
       </div>
     );
@@ -66,25 +66,25 @@ function PatientPage() {
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-semibold leading-tight truncate">{patient.name}</h1>
             <p className="text-xs text-muted-foreground">
-              {patient.birthDate} · {ageFrom(patient.birthDate)} лет · {patient.gender === "female" ? "женский" : "мужской"}
+              {patient.birthDate} · {ageFrom(patient.birthDate)} років · {patient.gender === "female" ? "жіноча" : "чоловіча"}
             </p>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={async () => {
-              if (confirm(`Удалить пациента «${patient.name}» и все его анализы?`)) {
+              if (confirm(`Видалити пацієнта «${patient.name}» і всі його аналізи?`)) {
                 try {
                   await deletePatient(patient.id);
                   invalidateStore();
                   window.history.back();
                 } catch (err) {
-                  toast.error("Не удалось удалить пациента", { description: errorMessage(err) });
+                  toast.error("Не вдалося видалити пацієнта", { description: errorMessage(err) });
                 }
               }
             }}
           >
-            <Trash2 className="h-4 w-4 mr-1.5" /> Удалить
+            <Trash2 className="h-4 w-4 mr-1.5" /> Видалити
           </Button>
         </div>
       </header>
@@ -93,15 +93,15 @@ function PatientPage() {
         <Tabs defaultValue="tests">
           <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
             <TabsList>
-              <TabsTrigger value="tests">Анализы ({tests.length})</TabsTrigger>
+              <TabsTrigger value="tests">Аналізи ({tests.length})</TabsTrigger>
               <TabsTrigger value="stats">Статистика</TabsTrigger>
             </TabsList>
-            <Button onClick={openAdd}><Plus className="h-4 w-4 mr-1.5" />Добавить анализ</Button>
+            <Button onClick={openAdd}><Plus className="h-4 w-4 mr-1.5" />Додати аналіз</Button>
           </div>
 
           <TabsContent value="tests" className="grid gap-3">
             {tests.length === 0 ? (
-              <Card><CardContent className="py-10 text-center text-muted-foreground">Нет анализов. Добавьте первый.</CardContent></Card>
+              <Card><CardContent className="py-10 text-center text-muted-foreground">Немає аналізів. Додайте перший.</CardContent></Card>
             ) : (
               [...tests].reverse().map((t) => {
                 const br = getBranch(t.mcv);
@@ -133,7 +133,7 @@ function PatientPage() {
                           <div className="text-xs text-muted-foreground mt-1 flex gap-3 flex-wrap">
                             {typeof t.hb === "number" && <span>Hb: {t.hb}</span>}
                             {typeof t.mcv === "number" && <span>MCV: {t.mcv}</span>}
-                            {typeof t.ferritin === "number" && <span>Ферритин: {t.ferritin}</span>}
+                            {typeof t.ferritin === "number" && <span>Феритин: {t.ferritin}</span>}
                           </div>
                         </div>
                         {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -144,13 +144,13 @@ function PatientPage() {
                           size="sm"
                           variant="ghost"
                           onClick={async () => {
-                            if (confirm("Удалить запись?")) {
+                            if (confirm("Видалити запис?")) {
                               try {
                                 await deleteTest(t.id, patient.id);
                                 invalidateStore();
-                                toast.success("Запись удалена");
+                                toast.success("Запис видалено");
                               } catch (err) {
-                                toast.error("Не удалось удалить запись", { description: errorMessage(err) });
+                                toast.error("Не вдалося видалити запис", { description: errorMessage(err) });
                               }
                             }
                           }}
@@ -162,7 +162,7 @@ function PatientPage() {
                         <DiagnosisResultCard
                           details={explain({
                             number: dx?.number ?? 0,
-                            name: dx?.name ?? "Анемия не выявлена",
+                            name: dx?.name ?? "Анемію не виявлено",
                             branch: br,
                             entry: t,
                             patient,
@@ -188,13 +188,13 @@ function PatientPage() {
                           })}
                           {t.morphology && (
                             <div className="rounded-md border px-2 py-1.5 text-sm col-span-2">
-                              <div className="text-[11px] text-muted-foreground">Морфология</div>
+                              <div className="text-[11px] text-muted-foreground">Морфологія</div>
                               <div>{t.morphology}</div>
                             </div>
                           )}
                           {t.notes && (
                             <div className="rounded-md border px-2 py-1.5 text-sm col-span-full">
-                              <div className="text-[11px] text-muted-foreground">Примечания</div>
+                              <div className="text-[11px] text-muted-foreground">Примітки</div>
                               <div>{t.notes}</div>
                             </div>
                           )}
