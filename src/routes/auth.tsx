@@ -11,7 +11,7 @@ import { Activity } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
-    meta: [{ title: "Вход — Трекер анемии" }],
+    meta: [{ title: "Вхід — Трекер анемії" }],
   }),
   component: AuthPage,
 });
@@ -44,17 +44,17 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Регистрация выполнена", {
-          description: "Проверьте почту для подтверждения адреса.",
+        toast.success("Реєстрацію виконано", {
+          description: "Перевірте пошту для підтвердження адреси.",
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success("Вход выполнен");
+        toast.success("Вхід виконано");
         navigate({ to: "/" });
       }
     } catch (err) {
-      toast.error("Ошибка", { description: (err as Error).message });
+      toast.error("Помилка", { description: (err as Error).message });
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ function AuthPage() {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      toast.error("Не удалось войти через Google", { description: String(result.error) });
+      toast.error("Не вдалося увійти через Google", { description: String(result.error) });
       setLoading(false);
       return;
     }
@@ -81,9 +81,9 @@ function AuthPage() {
           <div className="mx-auto h-12 w-12 rounded-lg bg-primary/10 text-primary grid place-items-center">
             <Activity className="h-6 w-6" />
           </div>
-          <CardTitle>{mode === "signin" ? "Вход" : "Регистрация"}</CardTitle>
+          <CardTitle>{mode === "signin" ? "Вхід" : "Реєстрація"}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            {mode === "signin" ? "Войдите в трекер анемии" : "Создайте учётную запись"}
+            {mode === "signin" ? "Увійдіть у трекер анемії" : "Створіть обліковий запис"}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -94,16 +94,16 @@ function AuthPage() {
             onClick={handleGoogle}
             disabled={loading}
           >
-            Войти через Google
+            Увійти через Google
           </Button>
           <div className="relative text-center text-xs text-muted-foreground">
-            <span className="bg-card px-2 relative z-10">или email</span>
+            <span className="bg-card px-2 relative z-10">або email</span>
             <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
           </div>
           <form onSubmit={handleEmail} className="space-y-3">
             {mode === "signup" && (
               <div className="space-y-1.5">
-                <Label htmlFor="name">Имя</Label>
+                <Label htmlFor="name">Ім'я</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
             )}
@@ -129,29 +129,29 @@ function AuthPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {mode === "signin" ? "Войти" : "Зарегистрироваться"}
+              {mode === "signin" ? "Увійти" : "Зареєструватися"}
             </Button>
           </form>
           <div className="text-center text-sm text-muted-foreground">
             {mode === "signin" ? (
               <>
-                Нет аккаунта?{" "}
+                Немає акаунта?{" "}
                 <button className="text-primary underline" onClick={() => setMode("signup")}>
-                  Создать
+                  Створити
                 </button>
               </>
             ) : (
               <>
-                Уже есть аккаунт?{" "}
+                Вже є акаунт?{" "}
                 <button className="text-primary underline" onClick={() => setMode("signin")}>
-                  Войти
+                  Увійти
                 </button>
               </>
             )}
           </div>
           <div className="text-center">
             <Link to="/" className="text-xs text-muted-foreground underline">
-              Вернуться на главную
+              Повернутися на головну
             </Link>
           </div>
         </CardContent>

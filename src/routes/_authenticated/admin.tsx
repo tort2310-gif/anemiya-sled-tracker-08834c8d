@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Shield, Users, Globe, LogIn } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Админ — статистика пользователей" }] }),
+  head: () => ({ meta: [{ title: "Адмін — статистика користувачів" }] }),
   component: AdminPage,
 });
 
@@ -27,10 +27,10 @@ function AdminPage() {
   const handleClaim = async () => {
     const res = await claim();
     if (res.granted) {
-      toast.success("Вы стали администратором");
+      toast.success("Ви стали адміністратором");
       refetch();
     } else {
-      toast.info("Администратор уже назначен");
+      toast.info("Адміністратора вже призначено");
     }
   };
 
@@ -41,7 +41,7 @@ function AdminPage() {
     const uniqueUsers = new Set(events.map((e) => e.user_id).filter(Boolean));
     const byCountry: Record<string, number> = {};
     for (const e of events) {
-      const key = e.country || e.country_code || "Неизвестно";
+      const key = e.country || e.country_code || "Невідомо";
       byCountry[key] = (byCountry[key] || 0) + 1;
     }
     const topCountries = Object.entries(byCountry)
@@ -62,28 +62,28 @@ function AdminPage() {
           <div className="flex items-center gap-3">
             <Link to="/">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-1" /> На главную
+                <ArrowLeft className="h-4 w-4 mr-1" /> На головну
               </Button>
             </Link>
             <h1 className="text-lg font-semibold flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" /> Админ-панель
+              <Shield className="h-5 w-5 text-primary" /> Адмін-панель
             </h1>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
-        {isLoading && <p className="text-muted-foreground">Загрузка…</p>}
+        {isLoading && <p className="text-muted-foreground">Завантаження…</p>}
 
         {error && (
           <Card>
             <CardContent className="pt-6 space-y-3">
               <p className="text-sm text-destructive">{(error as Error).message}</p>
               <p className="text-sm text-muted-foreground">
-                Если это ваш (владельца проекта) аккаунт — назначьте себя администратором:
+                Якщо це ваш (власника проєкту) акаунт — призначте себе адміністратором:
               </p>
               <Button onClick={handleClaim} size="sm">
-                Стать администратором
+                Стати адміністратором
               </Button>
             </CardContent>
           </Card>
@@ -94,17 +94,17 @@ function AdminPage() {
             <div className="grid gap-3 sm:grid-cols-3">
               <StatCard
                 icon={<Users className="h-4 w-4" />}
-                label="Всего пользователей"
+                label="Усього користувачів"
                 value={stats.totalUsers}
               />
               <StatCard
                 icon={<LogIn className="h-4 w-4" />}
-                label="Всего входов"
+                label="Усього входів"
                 value={stats.totalLogins}
               />
               <StatCard
                 icon={<Globe className="h-4 w-4" />}
-                label="Активных пользователей"
+                label="Активних користувачів"
                 value={stats.activeUsers}
               />
             </div>
@@ -112,12 +112,12 @@ function AdminPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Globe className="h-4 w-4" /> Страны
+                  <Globe className="h-4 w-4" /> Країни
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {stats.topCountries.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Данных пока нет.</p>
+                  <p className="text-sm text-muted-foreground">Даних поки що немає.</p>
                 ) : (
                   <ul className="space-y-2">
                     {stats.topCountries.map(([country, n]) => (
@@ -133,15 +133,15 @@ function AdminPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Пользователи</CardTitle>
+                <CardTitle className="text-base">Користувачі</CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-muted-foreground border-b">
                       <th className="py-2 pr-3">Email</th>
-                      <th className="py-2 pr-3">Имя</th>
-                      <th className="py-2 pr-3">Регистрация</th>
+                      <th className="py-2 pr-3">Ім'я</th>
+                      <th className="py-2 pr-3">Реєстрація</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -161,7 +161,7 @@ function AdminPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Журнал входов (последние 500)</CardTitle>
+                <CardTitle className="text-base">Журнал входів (останні 500)</CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -169,8 +169,8 @@ function AdminPage() {
                     <tr className="text-left text-muted-foreground border-b">
                       <th className="py-2 pr-3">Дата</th>
                       <th className="py-2 pr-3">Email</th>
-                      <th className="py-2 pr-3">Страна</th>
-                      <th className="py-2 pr-3">Город</th>
+                      <th className="py-2 pr-3">Країна</th>
+                      <th className="py-2 pr-3">Місто</th>
                       <th className="py-2 pr-3">IP</th>
                     </tr>
                   </thead>

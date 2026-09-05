@@ -9,19 +9,19 @@ interface Props {
 
 function statusBadge(s: "low" | "high" | "ok" | "critical" | "info") {
   if (s === "ok") return <Badge style={{ background: "var(--success, #16a34a)", color: "white" }}>✓ Норма</Badge>;
-  if (s === "low") return <Badge variant="destructive">↓ Ниже</Badge>;
-  if (s === "high") return <Badge variant="destructive">↑ Выше</Badge>;
+  if (s === "low") return <Badge variant="destructive">↓ Нижче</Badge>;
+  if (s === "high") return <Badge variant="destructive">↑ Вище</Badge>;
   if (s === "critical") return <Badge variant="destructive">⚠ Критично</Badge>;
   return <Badge variant="outline">—</Badge>;
 }
 
 export function DiagnosisResultCard({ details }: Props) {
   const color = branchColor(details.branch);
-  const noAnemia = details.number === 0 && /не выявлен/i.test(details.name);
+  const noAnemia = details.number === 0 && /не виявлено/i.test(details.name);
 
   return (
     <div className="grid gap-4">
-      {/* 2.1 Диагноз */}
+      {/* 2.1 Діагноз */}
       <div className="rounded-lg border-2 p-4" style={{ borderColor: noAnemia ? "var(--success, #16a34a)" : color }}>
         <div className="flex items-center gap-3 flex-wrap">
           {noAnemia ? (
@@ -38,29 +38,29 @@ export function DiagnosisResultCard({ details }: Props) {
           )}
           <div className="min-w-0">
             <div className="text-xs uppercase tracking-wide" style={{ color }}>
-              {branchLabel(details.branch as Branch)} анемия
+              {branchLabel(details.branch as Branch)} анемія
             </div>
             <div className="text-lg font-bold leading-tight uppercase">{details.name}</div>
           </div>
         </div>
       </div>
 
-      {/* 2.2 Объяснение */}
+      {/* 2.2 Пояснення */}
       <section className="rounded-lg border bg-card p-4">
-        <h3 className="text-sm font-semibold mb-2">Почему этот диагноз</h3>
+        <h3 className="text-sm font-semibold mb-2">Чому цей діагноз</h3>
         <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line">{details.explanation}</p>
       </section>
 
       {/* 2.3 Decisive values */}
       {details.decisive.length > 0 && (
         <section className="rounded-lg border bg-card p-4">
-          <h3 className="text-sm font-semibold mb-3">Показатели, повлиявшие на диагноз</h3>
+          <h3 className="text-sm font-semibold mb-3">Показники, що вплинули на діагноз</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b">
-                  <th className="py-2 pr-2 font-medium">Показатель</th>
-                  <th className="py-2 pr-2 font-medium">Значение</th>
+                  <th className="py-2 pr-2 font-medium">Показник</th>
+                  <th className="py-2 pr-2 font-medium">Значення</th>
                   <th className="py-2 pr-2 font-medium">Норма</th>
                   <th className="py-2 pr-2 font-medium">Статус</th>
                   <th className="py-2 pr-2 font-medium">Роль</th>
@@ -93,10 +93,10 @@ export function DiagnosisResultCard({ details }: Props) {
         </section>
       )}
 
-      {/* 2.4 Путь диагностики */}
+      {/* 2.4 Шлях діагностики */}
       {details.path.length > 0 && (
         <section className="rounded-lg border bg-card p-4">
-          <h3 className="text-sm font-semibold mb-2">Путь диагностики</h3>
+          <h3 className="text-sm font-semibold mb-2">Шлях діагностики</h3>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             {details.path.map((step, i) => (
               <div key={i} className="flex items-center gap-2">
@@ -108,10 +108,10 @@ export function DiagnosisResultCard({ details }: Props) {
         </section>
       )}
 
-      {/* 2.5 Рекомендации */}
+      {/* 2.5 Рекомендації */}
       {details.recommendations.length > 0 && (
         <section className="rounded-lg border bg-card p-4">
-          <h3 className="text-sm font-semibold mb-2">Рекомендации</h3>
+          <h3 className="text-sm font-semibold mb-2">Рекомендації</h3>
           <ul className="text-sm list-disc list-inside space-y-1 text-foreground/90">
             {details.recommendations.map((r, i) => <li key={i}>{r}</li>)}
           </ul>
@@ -119,7 +119,7 @@ export function DiagnosisResultCard({ details }: Props) {
       )}
 
       <p className="text-[11px] text-muted-foreground">
-        Автоматическое предположение по алгоритму MCV — не заменяет очной консультации врача.
+        Автоматичне припущення за алгоритмом MCV — не замінює очної консультації лікаря.
       </p>
     </div>
   );
