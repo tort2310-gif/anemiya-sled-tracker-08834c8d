@@ -100,70 +100,148 @@ export type Database = {
       }
       test_entries: {
         Row: {
+          acth: number | null
+          aldosterone: number | null
+          alt: number | null
+          ast: number | null
           b12: number | null
+          bilirubin_direct: number | null
           bilirubin_indirect: number | null
+          c_peptide: number | null
+          cortisol: number | null
           created_at: string
           creatinine: number | null
           date: string
+          electrophoresis: string | null
           epo: number | null
           ferritin: number | null
           folate: number | null
+          ft3: number | null
+          ft4: number | null
+          gfr: number | null
+          glucose: number | null
           hb: number | null
+          hba1c: number | null
+          hemolysis_trigger: string | null
           id: string
           iron: number | null
+          lead_blood: number | null
+          lead_urine: number | null
+          ldh: number | null
           mcv: number | null
           morphology: string | null
           notes: string | null
+          organomegaly: string | null
           patient_id: string
+          platelets: number | null
+          prolactin: number | null
+          renin: number | null
           retic_index: number | null
           reticulocytes: number | null
+          sideroblasts: boolean | null
           tibc: number | null
+          total_protein: number | null
           tsh: number | null
+          uric_acid: number | null
+          urea: number | null
           user_id: string
+          uzi_finding: string | null
         }
         Insert: {
+          acth?: number | null
+          aldosterone?: number | null
+          alt?: number | null
+          ast?: number | null
           b12?: number | null
+          bilirubin_direct?: number | null
           bilirubin_indirect?: number | null
+          c_peptide?: number | null
+          cortisol?: number | null
           created_at?: string
           creatinine?: number | null
           date: string
+          electrophoresis?: string | null
           epo?: number | null
           ferritin?: number | null
           folate?: number | null
+          ft3?: number | null
+          ft4?: number | null
+          gfr?: number | null
+          glucose?: number | null
           hb?: number | null
+          hba1c?: number | null
+          hemolysis_trigger?: string | null
           id?: string
           iron?: number | null
+          lead_blood?: number | null
+          lead_urine?: number | null
+          ldh?: number | null
           mcv?: number | null
           morphology?: string | null
           notes?: string | null
+          organomegaly?: string | null
           patient_id: string
+          platelets?: number | null
+          prolactin?: number | null
+          renin?: number | null
           retic_index?: number | null
           reticulocytes?: number | null
+          sideroblasts?: boolean | null
           tibc?: number | null
+          total_protein?: number | null
           tsh?: number | null
+          uric_acid?: number | null
+          urea?: number | null
           user_id: string
+          uzi_finding?: string | null
         }
         Update: {
+          acth?: number | null
+          aldosterone?: number | null
+          alt?: number | null
+          ast?: number | null
           b12?: number | null
+          bilirubin_direct?: number | null
           bilirubin_indirect?: number | null
+          c_peptide?: number | null
+          cortisol?: number | null
           created_at?: string
           creatinine?: number | null
           date?: string
+          electrophoresis?: string | null
           epo?: number | null
           ferritin?: number | null
           folate?: number | null
+          ft3?: number | null
+          ft4?: number | null
+          gfr?: number | null
+          glucose?: number | null
           hb?: number | null
+          hba1c?: number | null
+          hemolysis_trigger?: string | null
           id?: string
           iron?: number | null
+          lead_blood?: number | null
+          lead_urine?: number | null
+          ldh?: number | null
           mcv?: number | null
           morphology?: string | null
           notes?: string | null
+          organomegaly?: string | null
           patient_id?: string
+          platelets?: number | null
+          prolactin?: number | null
+          renin?: number | null
           retic_index?: number | null
           reticulocytes?: number | null
+          sideroblasts?: boolean | null
           tibc?: number | null
+          total_protein?: number | null
           tsh?: number | null
+          uric_acid?: number | null
+          urea?: number | null
           user_id?: string
+          uzi_finding?: string | null
         }
         Relationships: [
           {
