@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getRange, statusOf, ALL_LAB_KEYS } from "./ranges";
+import { getRange, statusOf, reticIndexStatus, ALL_LAB_KEYS } from "./ranges";
 
 describe("getRange", () => {
   it("returns gender-specific ranges for hb", () => {
@@ -25,6 +25,13 @@ describe("getRange", () => {
       expect(getRange(key, "female")).toBeTruthy();
     }
   });
+
+  it("returns ranges for the newly added diagnostic fields (lead, HUS/TTP, endocrine panel)", () => {
+    expect(getRange("leadBlood", "female")).toMatchObject({ min: 0, max: 5 });
+    expect(getRange("leadUrine", "female")).toMatchObject({ min: 0, max: 50 });
+    expect(getRange("platelets", "female")).toMatchObject({ min: 150, max: 400 });
+    expect(getRange("ldh", "female")).toMatchObject({ min: 125, max: 220 });
+  });
 });
 
 describe("statusOf", () => {
@@ -41,5 +48,14 @@ describe("statusOf", () => {
     expect(statusOf(15, r)).toBe("ok");
     expect(statusOf(20, r)).toBe("ok");
     expect(statusOf(20.001, r)).toBe("high");
+  });
+});
+
+describe("reticIndexStatus", () => {
+  it("uses the clinical cutoff of 2 (not a min/max range like other labs)", () => {
+    expect(reticIndexStatus(undefined)).toBe("na");
+    expect(reticIndexStatus(1.9)).toBe("inadequate");
+    expect(reticIndexStatus(2)).toBe("adequate");
+    expect(reticIndexStatus(3)).toBe("adequate");
   });
 });
